@@ -28,10 +28,13 @@ interface JdbcAirbyteStreamFactory : AirbyteStreamFactory, MetaFieldDecorator {
 
     override fun createNonGlobal(discoveredStream: DiscoveredStream) =
         AirbyteStreamFactory.createAirbyteStream(discoveredStream).apply {
-            if (hasCursorFields(discoveredStream)) {
-                supportedSyncModes = listOf(SyncMode.FULL_REFRESH, SyncMode.INCREMENTAL)
+            if (globalCursor != null) {
+                decorateAirbyteStream(this)
+            }
+            supportedSyncModes = if (hasCursorFields(discoveredStream)) {
+                listOf(SyncMode.FULL_REFRESH, SyncMode.INCREMENTAL)
             } else {
-                supportedSyncModes = listOf(SyncMode.FULL_REFRESH)
+                listOf(SyncMode.FULL_REFRESH)
             }
             sourceDefinedCursor = false
             if (hasValidPrimaryKey(discoveredStream)) {
